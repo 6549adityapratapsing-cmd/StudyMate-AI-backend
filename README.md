@@ -4,6 +4,12 @@ The official Node.js & Express REST API for **StudyMate AI** — an AI-Powered S
 
 ---
 
+## 🌐 Live Production Deployment
+- **API Base URL**: `https://studymate-ai-backend-kmhk.onrender.com/api`
+- **System Health Check**: [https://studymate-ai-backend-kmhk.onrender.com/api/health](https://studymate-ai-backend-kmhk.onrender.com/api/health)
+
+---
+
 ## 🏗️ Architecture: MVC + Services Pattern
 
 ```
