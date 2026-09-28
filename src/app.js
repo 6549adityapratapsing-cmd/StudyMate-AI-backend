@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import healthRoutes from './routes/healthRoutes.js';
 import authRoutes from './routes/authRoutes.js';
+import materialRoutes from './routes/materialRoutes.js';
 import { notFoundHandler, globalErrorHandler } from './middleware/errorMiddleware.js';
 
 // Load environment variables
@@ -47,6 +48,7 @@ app.get('/', (req, res) => {
 // Mount Routes
 app.use('/api/health', healthRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/materials', materialRoutes);
 
 // Fallback Middleware: 404 Not Found & Global Error Handler
 app.use(notFoundHandler);
