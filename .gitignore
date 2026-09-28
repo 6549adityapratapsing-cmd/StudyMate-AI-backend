@@ -18,3 +18,8 @@ yarn-error.log*
 .vscode/
 .idea/
 Thumbs.db
+
+# Local Development Data Store & OCR Cache
+data/
+*.traineddata
+

@@ -1,13 +1,15 @@
 import { supabase, isSupabaseConfigured } from '../config/db.js';
 import crypto from 'crypto';
+import { loadStore, saveStore } from '../utils/localStore.js';
 
-// In-memory development store for materials
-const localMaterialsStore = new Map();
+// Disk-persisted development store for materials (active when table is not yet migrated in Supabase)
+const localMaterialsStore = loadStore('materials.json');
 
 const isTableMissingError = (error) => {
   if (!error) return false;
   return (
     error.code === '42P01' ||
+    error.code === 'PGRST205' ||
     (error.message && error.message.toLowerCase().includes('could not find the table'))
   );
 };
@@ -67,6 +69,7 @@ export const MaterialModel = {
               created_at: new Date().toISOString(),
             };
             localMaterialsStore.set(newDoc.id, newDoc);
+            saveStore('materials.json', localMaterialsStore);
             return newDoc;
           }
           console.error('❌ [MaterialModel.create Error]:', error.message);
@@ -74,7 +77,7 @@ export const MaterialModel = {
         }
         return data;
       } catch (err) {
-        if (err.message?.includes('could not find the table')) {
+        if (err.message?.includes('could not find the table') || isTableMissingError(err)) {
           const newDoc = {
             id: crypto.randomUUID(),
             user_id: userId,
@@ -90,6 +93,7 @@ export const MaterialModel = {
             created_at: new Date().toISOString(),
           };
           localMaterialsStore.set(newDoc.id, newDoc);
+          saveStore('materials.json', localMaterialsStore);
           return newDoc;
         }
         throw err;
@@ -112,6 +116,7 @@ export const MaterialModel = {
       created_at: new Date().toISOString(),
     };
     localMaterialsStore.set(newDoc.id, newDoc);
+    saveStore('materials.json', localMaterialsStore);
     return newDoc;
   },
 
@@ -199,6 +204,7 @@ export const MaterialModel = {
     const item = localMaterialsStore.get(id);
     if (item && item.user_id === userId) {
       localMaterialsStore.delete(id);
+      saveStore('materials.json', localMaterialsStore);
       return true;
     }
     return false;

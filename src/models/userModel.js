@@ -1,13 +1,15 @@
 import { supabase, isSupabaseConfigured } from '../config/db.js';
 import crypto from 'crypto';
+import { loadStore, saveStore } from '../utils/localStore.js';
 
-// Local development fallback memory store (active when table is not yet migrated)
-const localUsersStore = new Map();
+// Local development fallback disk store (active when table is not yet migrated in Supabase)
+const localUsersStore = loadStore('users.json');
 
 const isTableMissingError = (error) => {
   if (!error) return false;
   return (
     error.code === '42P01' ||
+    error.code === 'PGRST205' ||
     (error.message && error.message.toLowerCase().includes('could not find the table'))
   );
 };
@@ -134,6 +136,7 @@ export const UserModel = {
               created_at: new Date().toISOString(),
             };
             localUsersStore.set(normalizedEmail, newUser);
+            saveStore('users.json', localUsersStore);
             const { password_hash, ...safeUser } = newUser;
             return safeUser;
           }
@@ -142,7 +145,7 @@ export const UserModel = {
         }
         return data;
       } catch (err) {
-        if (err.message?.includes('could not find the table')) {
+        if (err.message?.includes('could not find the table') || isTableMissingError(err)) {
           const newUser = {
             id: crypto.randomUUID(),
             email: normalizedEmail,
@@ -152,6 +155,7 @@ export const UserModel = {
             created_at: new Date().toISOString(),
           };
           localUsersStore.set(normalizedEmail, newUser);
+          saveStore('users.json', localUsersStore);
           const { password_hash, ...safeUser } = newUser;
           return safeUser;
         }
@@ -170,6 +174,7 @@ export const UserModel = {
     };
 
     localUsersStore.set(normalizedEmail, newUser);
+    saveStore('users.json', localUsersStore);
     console.log(`ℹ️ [UserModel]: User '${normalizedEmail}' created in development store.`);
 
     const { password_hash, ...safeUser } = newUser;
